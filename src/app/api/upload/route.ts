@@ -97,7 +97,7 @@ function extractDataFromText(text: string) {
   });
 
   // Remove duplicatas e ordena
-  const uniqueAmounts = [...new Set(amounts)].sort((a, b) => b - a);
+  const uniqueAmounts = Array.from(new Set(amounts)).sort((a, b) => b - a);
   console.log('Todos os valores encontrados:', uniqueAmounts);
 
   // Regex para encontrar datas em diferentes formatos
