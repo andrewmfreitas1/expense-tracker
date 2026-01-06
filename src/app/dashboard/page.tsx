@@ -52,12 +52,12 @@ export default function DashboardPage() {
 
   const processData = (data: Expense[]) => {
     // Total de despesas
-    const total = data.reduc
+    const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+    setTotalExpenses(total);
 
     // Detectar anomalias
     const alerts = detectAnomalies(data);
-    setAnomalyAlerts(alerts);e((sum, expense) => sum + expense.amount, 0);
-    setTotalExpenses(total);
+    setAnomalyAlerts(alerts);
 
     // Dados mensais
     const monthlyMap = new Map<string, number>();
