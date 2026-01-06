@@ -82,68 +82,88 @@ function extractDataFromText(text: string) {
   console.log('Texto completo recebido:', text);
   console.log('Tamanho do texto:', text.length);
   
-  const amounts: number[] = [];
+  const amounts: { value: number; priority: number; match: string }[] = [];
   
-  // Múltiplos padrões de regex para valores em reais
+  // Padrões com prioridade (maior = mais importante)
   const patterns = [
-    /R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi,           // R$ 1.234,56
-    /R\$\s*(\d+,\d{2})/gi,                            // R$ 123,56
-    /(\d{1,3}(?:\.\d{3})*,\d{2})/g,                   // 1.234,56
-    /valor[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, // Valor: R$ 1.234,56
-    /total[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, // Total: R$ 1.234,56
-    /(\d+,\d{2})/g,                                    // 123,56
+    { regex: /(?:valor\s+a\s+pagar|total\s+a\s+pagar|valor\s+total)[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, priority: 100 },
+    { regex: /(?:vencimento|valor)[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, priority: 90 },
+    { regex: /R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, priority: 50 },
+    { regex: /total[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, priority: 80 },
+    { regex: /(\d{1,3}(?:\.\d{3})*,\d{2})/g, priority: 10 },
   ];
 
-  patterns.forEach((pattern, index) => {
+  patterns.forEach((pattern) => {
     let match;
-    while ((match = pattern.exec(text)) !== null) {
+    while ((match = pattern.regex.exec(text)) !== null) {
       const valueStr = match[1];
       const value = parseFloat(valueStr.replace(/\./g, '').replace(',', '.'));
-      if (value > 0 && value < 1000000) { // Valores razoáveis
-        amounts.push(value);
-        console.log(`Padrão ${index + 1} encontrou: ${valueStr} = ${value}`);
+      if (value > 0 && value < 1000000) {
+        amounts.push({ 
+          value, 
+          priority: pattern.priority,
+          match: match[0]
+        });
+        console.log(`Encontrado [prioridade ${pattern.priority}]: ${match[0]} = ${value}`);
       }
     }
   });
 
-  // Remove duplicatas e ordena
-  const uniqueAmounts = Array.from(new Set(amounts)).sort((a, b) => b - a);
-  console.log('Todos os valores encontrados:', uniqueAmounts);
+  // Ordena por prioridade (maior primeiro), depois por valor (maior primeiro)
+  amounts.sort((a, b) => {
+    if (b.priority !== a.priority) return b.priority - a.priority;
+    return b.value - a.value;
+  });
 
-  // Regex para encontrar datas em diferentes formatos
-  const dates: string[] = [];
+  console.log('Valores ordenados por prioridade:', amounts.map(a => `${a.value} (${a.priority})`));
+
+  // Regex para datas com prioridade
+  const dates: { date: string; priority: number }[] = [];
   const datePatterns = [
-    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/g,        // DD/MM/YYYY
-    /(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})/g,        // YYYY/MM/DD
-    /vencimento[:\s]+(\d{2})[\/\-](\d{2})[\/\-](\d{4})/gi, // Vencimento: DD/MM/YYYY
+    { regex: /(?:vencimento|data\s+de\s+vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/gi, priority: 100 },
+    { regex: /(?:vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})/gi, priority: 90 },
+    { regex: /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/g, priority: 50 },
+    { regex: /(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})/g, priority: 40 },
   ];
 
   datePatterns.forEach(pattern => {
     let match;
-    while ((match = pattern.exec(text)) !== null) {
+    while ((match = pattern.regex.exec(text)) !== null) {
+      let dateStr;
       if (match[1].length === 4) {
         // YYYY/MM/DD
-        dates.push(`${match[1]}-${match[2]}-${match[3]}`);
-      } else {
+        dateStr = `${match[1]}-${match[2]}-${match[3]}`;
+      } else if (match[3] && match[3].length === 4) {
         // DD/MM/YYYY
-        dates.push(`${match[3]}-${match[2]}-${match[1]}`);
+        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+      } else if (match[3] && match[3].length === 2) {
+        // DD/MM/YY - assumir 20XX
+        const year = parseInt(match[3]) > 50 ? `19${match[3]}` : `20${match[3]}`;
+        dateStr = `${year}-${match[2]}-${match[1]}`;
+      } else {
+        continue;
       }
+      
+      dates.push({ date: dateStr, priority: pattern.priority });
+      console.log(`Data encontrada [prioridade ${pattern.priority}]: ${match[0]}`);
     }
   });
 
-  console.log('Datas encontradas:', dates);
+  // Ordena por prioridade
+  dates.sort((a, b) => b.priority - a.priority);
 
-  // Pegar o maior valor (geralmente é o valor total do boleto)
-  const extractedAmount = uniqueAmounts.length > 0 ? uniqueAmounts[0] : 100.00;
+  // Pegar o valor e data com maior prioridade
+  const extractedAmount = amounts.length > 0 ? amounts[0].value : 100.00;
+  const extractedDate = dates.length > 0 ? dates[0].date : new Date().toISOString().split('T')[0];
   
   const result = {
     amount: extractedAmount,
-    date: dates.length > 0 ? dates[0] : new Date().toISOString().split('T')[0],
+    date: extractedDate,
     description: text.length > 10 ? text.substring(0, 200).trim() : 'Despesa importada - ajuste os valores',
   };
 
   console.log('=== RESULTADO FINAL ===');
-  console.log('Valor extraído:', result.amount);
+  console.log('Valor extraído:', result.amount, amounts.length > 0 ? `(de: ${amounts[0].match})` : '');
   console.log('Data extraída:', result.date);
   console.log('======================');
   
