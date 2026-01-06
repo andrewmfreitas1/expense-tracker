@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { createWorker } from 'tesseract.js';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 segundos para processar
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,29 +12,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Arquivo não fornecido' }, { status: 400 });
     }
 
-    // Salvar arquivo
+    console.log('Arquivo recebido:', file.name, file.type, file.size);
+
+    // Processar o arquivo em memória (Vercel não tem filesystem persistente)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadsDir, { recursive: true });
-
-    const fileName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadsDir, fileName);
-    await writeFile(filePath, buffer);
-
-    // Extrair texto usando OCR (para imagens)
+    // OCR simplificado - extrair de base64 ou usar serviço externo
+    // Por enquanto, vamos fazer extração básica baseada no tipo de arquivo
     let extractedText = '';
     
     if (file.type.includes('image')) {
-      const worker = await createWorker('por');
-      const { data: { text } } = await worker.recognize(filePath);
-      extractedText = text;
-      await worker.terminate();
-    } else if (file.type.includes('pdf')) {
-      // Para PDFs, seria necessário uma biblioteca como pdf-parse
-      // Por enquanto, vamos retornar dados simulados
-      extractedText = 'PDF processing - simulado';
+      // Para imagens, tentar extrair com Tesseract (se disponível)
+      try {
+        const { createWorker } = await import('tesseract.js');
+        const worker = await createWorker('por', 1, {
+          logger: (m) => console.log(m),
+        });
+        
+        // Converter buffer para formato que Tesseract aceita
+        const { data: { text } } = await worker.recognize(buffer);
+        extractedText = text;
+        await worker.terminate();
+        console.log('OCR concluído:', extractedText.substring(0, 100));
+      } catch (ocrError) {
+        console.error('Erro no OCR:', ocrError);
+        // Se OCR falhar, continuar sem ele
+        extractedText = '';
+      }
     }
 
     // Extrair informações do texto
@@ -42,14 +47,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      fileName,
-      filePath: `/uploads/${fileName}`,
+      fileName: file.name,
       extracted,
+      debug: {
+        fileSize: file.size,
+        fileType: file.type,
+        textLength: extractedText.length,
+      }
     });
   } catch (error) {
     console.error('Erro no upload:', error);
     return NextResponse.json(
-      { error: 'Erro ao processar arquivo' },
+      { 
+        error: 'Erro ao processar arquivo',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
       { status: 500 }
     );
   }
