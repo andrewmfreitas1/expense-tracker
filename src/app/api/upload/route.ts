@@ -120,8 +120,9 @@ function extractDataFromText(text: string) {
   // Regex para datas com prioridade
   const dates: { date: string; priority: number }[] = [];
   const datePatterns = [
-    { regex: /(?:vencimento|data\s+de\s+vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/gi, priority: 100 },
-    { regex: /(?:vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})/gi, priority: 90 },
+    { regex: /(?:VENCIMENTO|vencimento|Data\s+de\s+Vencimento|data\s+de\s+vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/gi, priority: 100 },
+    { regex: /(?:VENCIMENTO|vencimento)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{2})/gi, priority: 90 },
+    { regex: /(?:venc\.|VENC\.)[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/gi, priority: 95 },
     { regex: /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/g, priority: 50 },
     { regex: /(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})/g, priority: 40 },
   ];
