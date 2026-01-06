@@ -68,36 +68,74 @@ export async function POST(request: NextRequest) {
 }
 
 function extractDataFromText(text: string) {
-  console.log('Extraindo dados do texto:', text.substring(0, 200));
+  console.log('=== INICIANDO EXTRAÇÃO DE DADOS ===');
+  console.log('Texto completo recebido:', text);
+  console.log('Tamanho do texto:', text.length);
   
-  // Regex para encontrar valores em reais
-  const amountRegex = /R\$?\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2}))/g;
   const amounts: number[] = [];
-  let match;
-
-  while ((match = amountRegex.exec(text)) !== null) {
-    const value = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
-    amounts.push(value);
-    console.log('Valor encontrado:', value);
-  }
-
-  // Regex para encontrar datas
-  const dateRegex = /(\d{2})[\/\-](\d{2})[\/\-](\d{4})/g;
-  const dates: string[] = [];
   
-  while ((match = dateRegex.exec(text)) !== null) {
-    const [, day, month, year] = match;
-    dates.push(`${year}-${month}-${day}`);
-    console.log('Data encontrada:', `${day}/${month}/${year}`);
-  }
+  // Múltiplos padrões de regex para valores em reais
+  const patterns = [
+    /R\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi,           // R$ 1.234,56
+    /R\$\s*(\d+,\d{2})/gi,                            // R$ 123,56
+    /(\d{1,3}(?:\.\d{3})*,\d{2})/g,                   // 1.234,56
+    /valor[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, // Valor: R$ 1.234,56
+    /total[:\s]+R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/gi, // Total: R$ 1.234,56
+    /(\d+,\d{2})/g,                                    // 123,56
+  ];
 
-  // Se não encontrou nada no OCR, retornar valores padrão para o usuário preencher
+  patterns.forEach((pattern, index) => {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const valueStr = match[1];
+      const value = parseFloat(valueStr.replace(/\./g, '').replace(',', '.'));
+      if (value > 0 && value < 1000000) { // Valores razoáveis
+        amounts.push(value);
+        console.log(`Padrão ${index + 1} encontrou: ${valueStr} = ${value}`);
+      }
+    }
+  });
+
+  // Remove duplicatas e ordena
+  const uniqueAmounts = [...new Set(amounts)].sort((a, b) => b - a);
+  console.log('Todos os valores encontrados:', uniqueAmounts);
+
+  // Regex para encontrar datas em diferentes formatos
+  const dates: string[] = [];
+  const datePatterns = [
+    /(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/g,        // DD/MM/YYYY
+    /(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})/g,        // YYYY/MM/DD
+    /vencimento[:\s]+(\d{2})[\/\-](\d{2})[\/\-](\d{4})/gi, // Vencimento: DD/MM/YYYY
+  ];
+
+  datePatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      if (match[1].length === 4) {
+        // YYYY/MM/DD
+        dates.push(`${match[1]}-${match[2]}-${match[3]}`);
+      } else {
+        // DD/MM/YYYY
+        dates.push(`${match[3]}-${match[2]}-${match[1]}`);
+      }
+    }
+  });
+
+  console.log('Datas encontradas:', dates);
+
+  // Pegar o maior valor (geralmente é o valor total do boleto)
+  const extractedAmount = uniqueAmounts.length > 0 ? uniqueAmounts[0] : 100.00;
+  
   const result = {
-    amount: amounts.length > 0 ? Math.max(...amounts) : 100.00, // valor padrão
+    amount: extractedAmount,
     date: dates.length > 0 ? dates[0] : new Date().toISOString().split('T')[0],
     description: text.length > 10 ? text.substring(0, 200).trim() : 'Despesa importada - ajuste os valores',
   };
 
-  console.log('Dados extraídos:', result);
+  console.log('=== RESULTADO FINAL ===');
+  console.log('Valor extraído:', result.amount);
+  console.log('Data extraída:', result.date);
+  console.log('======================');
+  
   return result;
 }
