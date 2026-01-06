@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, DollarSign, Calendar, PieChartIcon } from 'lucide-react';
+import AnomalyAlerts, { detectAnomalies } from '@/components/AnomalyAlerts';
 
 interface Expense {
   id: string;
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [anomalyAlerts, setAnomalyAlerts] = useState<ReturnType<typeof detectAnomalies>>([]);
 
   useEffect(() => {
     fetchExpenses();
@@ -50,7 +52,11 @@ export default function DashboardPage() {
 
   const processData = (data: Expense[]) => {
     // Total de despesas
-    const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+    const total = data.reduc
+
+    // Detectar anomalias
+    const alerts = detectAnomalies(data);
+    setAnomalyAlerts(alerts);e((sum, expense) => sum + expense.amount, 0);
     setTotalExpenses(total);
 
     // Dados mensais
@@ -99,7 +105,12 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+          <hAlertas de Anomalias */}
+        <div className="mb-8">
+          <AnomalyAlerts alerts={anomalyAlerts} />
+        </div>
+
+        {/* 1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">Visualize suas despesas e estatísticas</p>
         </div>
 
