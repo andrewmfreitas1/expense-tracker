@@ -80,9 +80,6 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
-            ← Voltar
-          </Link>
           <h1 className="text-4xl font-bold text-gray-900">Upload de Contas</h1>
           <p className="text-gray-600 mt-2">
             Faça upload de PDFs ou imagens das suas contas
