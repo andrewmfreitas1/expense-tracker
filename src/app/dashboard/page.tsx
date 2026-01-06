@@ -105,13 +105,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         <div className="mb-8">
-          <hAlertas de Anomalias */}
-        <div className="mb-8">
-          <AnomalyAlerts alerts={anomalyAlerts} />
+          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">Visualize suas despesas e estatísticas</p>
         </div>
 
-        {/* 1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Visualize suas despesas e estatísticas</p>
+        {/* Alertas de Anomalias */}
+        <div className="mb-8">
+          <AnomalyAlerts alerts={anomalyAlerts} />
         </div>
 
         {/* Cards de resumo */}
