@@ -68,14 +68,17 @@ export async function POST(request: NextRequest) {
 }
 
 function extractDataFromText(text: string) {
+  console.log('Extraindo dados do texto:', text.substring(0, 200));
+  
   // Regex para encontrar valores em reais
   const amountRegex = /R\$?\s*(\d{1,3}(?:\.\d{3})*(?:,\d{2}))/g;
   const amounts: number[] = [];
   let match;
 
   while ((match = amountRegex.exec(text)) !== null) {
-    const value = parseFloat(match[1].replace('.', '').replace(',', '.'));
+    const value = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
     amounts.push(value);
+    console.log('Valor encontrado:', value);
   }
 
   // Regex para encontrar datas
@@ -85,12 +88,16 @@ function extractDataFromText(text: string) {
   while ((match = dateRegex.exec(text)) !== null) {
     const [, day, month, year] = match;
     dates.push(`${year}-${month}-${day}`);
+    console.log('Data encontrada:', `${day}/${month}/${year}`);
   }
 
-  // Retornar dados extraídos
-  return {
-    amount: amounts.length > 0 ? Math.max(...amounts) : undefined,
+  // Se não encontrou nada no OCR, retornar valores padrão para o usuário preencher
+  const result = {
+    amount: amounts.length > 0 ? Math.max(...amounts) : 100.00, // valor padrão
     date: dates.length > 0 ? dates[0] : new Date().toISOString().split('T')[0],
-    description: text.substring(0, 200).trim() || 'Despesa importada',
+    description: text.length > 10 ? text.substring(0, 200).trim() : 'Despesa importada - ajuste os valores',
   };
+
+  console.log('Dados extraídos:', result);
+  return result;
 }
