@@ -18,11 +18,21 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // OCR simplificado - extrair de base64 ou usar serviço externo
-    // Por enquanto, vamos fazer extração básica baseada no tipo de arquivo
+    // Extrair texto baseado no tipo de arquivo
     let extractedText = '';
     
-    if (file.type.includes('image')) {
+    if (file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf')) {
+      // Processar PDF
+      try {
+        const pdfParse = (await import('pdf-parse')).default;
+        const pdfData = await pdfParse(buffer);
+        extractedText = pdfData.text;
+        console.log('PDF processado - texto extraído:', extractedText.length, 'caracteres');
+      } catch (pdfError) {
+        console.error('Erro ao processar PDF:', pdfError);
+        extractedText = '';
+      }
+    } else if (file.type.includes('image')) {
       // Para imagens, tentar extrair com Tesseract (se disponível)
       try {
         const { createWorker } = await import('tesseract.js');
