@@ -86,18 +86,62 @@ Depois de adicionar as 3 variáveis:
 
 ---
 
+### 4. Aplicar Migrações do Banco de Dados
+
+**IMPORTANTE:** Após configurar as variáveis, você precisa aplicar as migrações no banco de dados de produção.
+
+#### Opção 1: Via Terminal Local (Recomendado)
+
+No terminal do VS Code:
+
+```powershell
+# Configure temporariamente a DATABASE_URL de produção
+$env:DATABASE_URL="postgresql://usuario:senha@host/database?sslmode=require"
+
+# Aplique as migrações
+npm run prisma:migrate:deploy
+
+# Limpe a variável (opcional)
+Remove-Item Env:\DATABASE_URL
+```
+
+⚠️ **Substitua a URL** pela conexão PostgreSQL do Neon ou Vercel Postgres (copie do dashboard da Vercel).
+
+#### Opção 2: Via Vercel CLI
+
+```powershell
+# Instalar Vercel CLI (se não tiver)
+npm i -g vercel
+
+# Login
+vercel login
+
+# Executar migração
+vercel env pull .env.production
+npx prisma migrate deploy
+```
+
+#### O que as migrações fazem:
+- Criam as tabelas: User, Account, Session, VerificationToken, Expense
+- Adicionam índices para performance
+- Configuram relacionamentos e constraints
+
+---
+
 ## 🎯 Como Usar a Aplicação Após Deploy
 
 ### Primeira Vez:
 
-1. Acesse: `https://seu-projeto.vercel.app/login`
-2. Clique em **"Criar Conta"**
-3. Preencha:
+1. ✅ Configure as variáveis de ambiente
+2. ✅ Aplique as migrações do banco (`npm run prisma:migrate:deploy`)
+3. Acesse: `https://seu-projeto.vercel.app/login`
+4. Clique em **"Criar Conta"**
+5. Preencha:
    - Nome
    - Email
    - Senha (mínimo 6 caracteres)
-4. Clique em **Criar Conta**
-5. Você será logado automaticamente
+6. Clique em **Criar Conta**
+7. Você será logado automaticamente
 
 ### Próximos Acessos:
 
