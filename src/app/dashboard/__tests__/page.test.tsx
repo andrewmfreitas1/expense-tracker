@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+﻿import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import DashboardPage from '@/app/dashboard/page';
 
 // Mock do fetch global
@@ -47,28 +47,33 @@ describe('DashboardPage', () => {
     jest.clearAllMocks();
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
-      json: async () => mockExpenses,
+      json: async () => Array.isArray(mockExpenses) ? mockExpenses : [],
     });
   });
 
   describe('Renderização Inicial', () => {
     it('deve renderizar o título da página', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
       });
     });
 
-    it('deve mostrar loading inicial', () => {
-      render(<DashboardPage />);
+    it('deve mostrar loading inicial', async () => {
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
-      // Componente deve estar carregando inicialmente
       expect(screen.queryByText(/carregando/i) || true).toBeTruthy();
     });
 
     it('deve buscar despesas ao carregar', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/expenses');
@@ -78,16 +83,19 @@ describe('DashboardPage', () => {
 
   describe('Dados e Estatísticas', () => {
     it('deve calcular total de despesas corretamente', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Total: 150.50 + 80.00 + 100.00 = 330.50
         expect(screen.getByText(/330[.,]50/)).toBeInTheDocument();
       });
     });
 
     it('deve mostrar número total de despesas', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/3/)).toBeInTheDocument();
@@ -95,16 +103,19 @@ describe('DashboardPage', () => {
     });
 
     it('deve processar dados mensais', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Deve ter processado os dados e renderizado gráfico
         expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
       });
     });
 
     it('deve processar dados por categoria', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
@@ -114,7 +125,9 @@ describe('DashboardPage', () => {
 
   describe('Gráficos', () => {
     it('deve renderizar gráfico de barras (mensal)', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
@@ -122,7 +135,9 @@ describe('DashboardPage', () => {
     });
 
     it('deve renderizar gráfico de pizza (categorias)', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
@@ -130,7 +145,9 @@ describe('DashboardPage', () => {
     });
 
     it('deve renderizar gráfico de linha (tendência)', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByTestId('line-chart')).toBeInTheDocument();
@@ -141,7 +158,7 @@ describe('DashboardPage', () => {
   describe('Alertas de Anomalia', () => {
     it('deve detectar anomalias nos dados', async () => {
       const expensesWithAnomaly = [
-        { id: '1', amount: 300, category: 'Luz', date: '2024-03-01' }, // Anomalia
+        { id: '1', amount: 300, category: 'Luz', date: '2024-03-01' },
         { id: '2', amount: 100, category: 'Luz', date: '2024-02-01' },
         { id: '3', amount: 100, category: 'Luz', date: '2024-01-01' },
       ];
@@ -151,10 +168,11 @@ describe('DashboardPage', () => {
         json: async () => expensesWithAnomaly,
       });
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Deve mostrar alerta de anomalia
         expect(screen.getByText(/alertas de variação/i) || screen.getByText(/luz/i)).toBeInTheDocument();
       });
     });
@@ -171,7 +189,9 @@ describe('DashboardPage', () => {
         json: async () => normalExpenses,
       });
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/dentro do padrão/i)).toBeInTheDocument();
@@ -181,7 +201,9 @@ describe('DashboardPage', () => {
 
   describe('Cards de Resumo', () => {
     it('deve mostrar card de total de despesas', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/total de despesas/i)).toBeInTheDocument();
@@ -189,7 +211,9 @@ describe('DashboardPage', () => {
     });
 
     it('deve mostrar card de média mensal', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/média mensal/i)).toBeInTheDocument();
@@ -197,10 +221,11 @@ describe('DashboardPage', () => {
     });
 
     it('deve calcular média mensal corretamente', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Janeiro: 230.50, Fevereiro: 100 = média 165.25
         expect(screen.getByText(/165[.,]25/) || screen.getByText(/média/i)).toBeInTheDocument();
       });
     });
@@ -211,7 +236,9 @@ describe('DashboardPage', () => {
       const consoleError = jest.spyOn(console, 'error').mockImplementation();
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(consoleError).toHaveBeenCalledWith(
@@ -227,10 +254,11 @@ describe('DashboardPage', () => {
       jest.spyOn(console, 'error').mockImplementation();
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Loading deve ter parado
         expect(screen.queryByText(/carregando/i)).not.toBeInTheDocument();
       });
     });
@@ -243,7 +271,9 @@ describe('DashboardPage', () => {
         json: async () => [],
       });
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByText(/R\$ 0[.,]00/)).toBeInTheDocument();
@@ -256,7 +286,9 @@ describe('DashboardPage', () => {
         json: async () => [],
       });
 
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
@@ -267,7 +299,9 @@ describe('DashboardPage', () => {
 
   describe('Links de Navegação', () => {
     it('deve ter link para adicionar nova despesa', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         const link = screen.getByRole('link', { name: /adicionar despesa/i });
@@ -276,7 +310,9 @@ describe('DashboardPage', () => {
     });
 
     it('deve ter link para ver todas as despesas', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
         const link = screen.getByRole('link', { name: /ver todas/i });
@@ -287,19 +323,21 @@ describe('DashboardPage', () => {
 
   describe('Formatação de Dados', () => {
     it('deve formatar valores monetários corretamente', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Deve mostrar valores formatados como R$ X,XX
         expect(screen.getByText(/R\$/)).toBeInTheDocument();
       });
     });
 
     it('deve formatar datas corretamente nos gráficos', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Datas devem estar no formato YYYY-MM
         expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
       });
     });
@@ -307,10 +345,11 @@ describe('DashboardPage', () => {
 
   describe('Responsividade', () => {
     it('deve usar ResponsiveContainer para gráficos', async () => {
-      render(<DashboardPage />);
+      await act(async () => {
+        render(<DashboardPage />);
+      });
       
       await waitFor(() => {
-        // Recharts ResponsiveContainer deve estar presente
         expect(screen.getAllByTestId(/chart/).length).toBeGreaterThan(0);
       });
     });
