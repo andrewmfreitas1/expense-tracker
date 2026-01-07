@@ -1,6 +1,21 @@
 import { GET, POST } from '@/app/api/expenses/route';
 import { NextRequest } from 'next/server';
-import { mockPrisma } from '@/__mocks__/prisma';
+
+// Mock do prisma antes de qualquer importação
+const mockPrisma = {
+  expense: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+  },
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+};
+
+jest.mock('@/lib/prisma', () => ({
+  prisma: mockPrisma,
+}));
 
 // Mock do NextRequest e NextResponse
 jest.mock('next/server', () => ({

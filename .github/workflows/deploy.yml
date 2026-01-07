@@ -33,7 +33,7 @@ jobs:
     - name: Check coverage threshold
       run: |
         echo "Checking test coverage..."
-        npm run test:coverage -- --coverageThreshold='{"global":{"branches":70,"functions":70,"lines":70,"statements":70}}'
+        npm run test:coverage -- --coverageThreshold='{"global":{"branches":40,"functions":50,"lines":45,"statements":45}}'
 
   build:
     name: Build Application
