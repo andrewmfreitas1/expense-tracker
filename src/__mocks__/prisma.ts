@@ -25,8 +25,5 @@ export const mockPrisma = {
   $disconnect: jest.fn(),
 };
 
-jest.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
-}));
-
+export const prisma = mockPrisma;
 export default mockPrisma;

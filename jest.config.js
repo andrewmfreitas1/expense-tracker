@@ -12,6 +12,8 @@ const customJestConfig = {
   moduleNameMapper: {
     // Mapear imports do @ para src
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Mock do Prisma Client
+    '^@/lib/prisma$': '<rootDir>/src/__mocks__/prisma.ts',
   },
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
