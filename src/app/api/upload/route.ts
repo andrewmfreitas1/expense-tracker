@@ -15,8 +15,21 @@ export async function POST(request: NextRequest) {
     console.log('Arquivo recebido:', file.name, file.type, file.size);
 
     // Processar o arquivo em memória (Vercel não tem filesystem persistente)
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Compatível com Node.js (Buffer) e Browser (File API)
+    let buffer: Buffer;
+    if (typeof file.arrayBuffer === 'function') {
+      // Browser/File API compatible
+      const bytes = await file.arrayBuffer();
+      buffer = Buffer.from(bytes);
+    } else if (file instanceof Buffer) {
+      // NodeJS/multipart
+      buffer = file;
+    } else if ('buffer' in file) {
+      // Some multer/file-api implementations
+      buffer = Buffer.from((file as any).buffer);
+    } else {
+      throw new Error('Tipo de arquivo não suportado para processamento');
+    }
 
     // Extrair texto baseado no tipo de arquivo
     let extractedText = '';

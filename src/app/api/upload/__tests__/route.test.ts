@@ -27,6 +27,22 @@ jest.mock('tesseract.js', () => ({
 // Mock do pdf-parse
 jest.mock('pdf-parse', () => jest.fn());
 
+// Helper para criar File mock com arrayBuffer()
+function createMockFile(content: string, filename: string, type: string) {
+  const blob = new Blob([content], { type });
+  const file = new File([blob], filename, { type });
+  
+  // Adicionar arrayBuffer() se não existir (Node.js environment)
+  if (!file.arrayBuffer) {
+    (file as any).arrayBuffer = async () => {
+      const buffer = Buffer.from(content);
+      return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+    };
+  }
+  
+  return file;
+}
+
 describe('API Route: /api/upload', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,9 +57,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'Valor Total: R$ 150,50' },
       });
 
-      const mockFile = new File(['image content'], 'conta-luz.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('image content', 'conta-luz.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -70,9 +84,7 @@ describe('API Route: /api/upload', () => {
         text: 'Fatura de Água\nValor: R$ 80,00',
       });
 
-      const mockFile = new File(['pdf content'], 'conta-agua.pdf', {
-        type: 'application/pdf',
-      });
+      const mockFile = createMockFile('pdf content', 'conta-agua.pdf', 'application/pdf');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -105,9 +117,7 @@ describe('API Route: /api/upload', () => {
     });
 
     it('deve retornar erro 400 para tipo de arquivo não suportado', async () => {
-      const mockFile = new File(['content'], 'document.txt', {
-        type: 'text/plain',
-      });
+      const mockFile = createMockFile('content', 'document.txt', 'text/plain');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -131,9 +141,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'Texto extraído' },
       });
 
-      const mockFile = new File(['png content'], 'conta.png', {
-        type: 'image/png',
-      });
+      const mockFile = createMockFile('png content', 'conta.png', 'image/png');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -156,9 +164,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'Texto' },
       });
 
-      const mockFile = new File(['content'], 'test.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('content', 'test.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -183,9 +189,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'Texto' },
       });
 
-      const mockFile = new File(['content'], 'conta.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('content', 'conta.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -206,9 +210,7 @@ describe('API Route: /api/upload', () => {
 
       recognize.mockRejectedValue(new Error('OCR failed'));
 
-      const mockFile = new File(['content'], 'test.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('content', 'test.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -229,9 +231,7 @@ describe('API Route: /api/upload', () => {
 
       pdfParse.mockRejectedValue(new Error('PDF parsing failed'));
 
-      const mockFile = new File(['content'], 'test.pdf', {
-        type: 'application/pdf',
-      });
+      const mockFile = createMockFile('content', 'test.pdf', 'application/pdf');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -256,9 +256,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'Valor Total: R$ 250,75\nVencimento: 15/01/2024' },
       });
 
-      const mockFile = new File(['content'], 'test.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('content', 'test.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -281,9 +279,7 @@ describe('API Route: /api/upload', () => {
         data: { text: 'COMPANHIA DE ENERGIA ELÉTRICA\nValor: R$ 150,00' },
       });
 
-      const mockFile = new File(['content'], 'test.jpg', {
-        type: 'image/jpeg',
-      });
+      const mockFile = createMockFile('content', 'test.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -303,10 +299,8 @@ describe('API Route: /api/upload', () => {
   describe('Validações de Arquivo', () => {
     it('deve validar tamanho máximo de arquivo', async () => {
       // Arquivo muito grande (>10MB)
-      const largeContent = new Uint8Array(11 * 1024 * 1024); // 11MB
-      const mockFile = new File([largeContent], 'large.jpg', {
-        type: 'image/jpeg',
-      });
+      const largeContent = 'x'.repeat(11 * 1024 * 1024); // 11MB
+      const mockFile = createMockFile(largeContent, 'large.jpg', 'image/jpeg');
 
       const formData = new FormData();
       formData.append('file', mockFile);
@@ -332,9 +326,7 @@ describe('API Route: /api/upload', () => {
       ];
 
       for (const format of formats) {
-        const mockFile = new File(['content'], `test.${format.ext}`, {
-          type: format.type,
-        });
+        const mockFile = createMockFile('content', `test.${format.ext}`, format.type);
 
         const formData = new FormData();
         formData.append('file', mockFile);
