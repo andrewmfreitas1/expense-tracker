@@ -1,22 +1,6 @@
 import { GET, POST } from '@/app/api/expenses/route';
 import { NextRequest } from 'next/server';
 
-// Mock do prisma antes de qualquer importação
-const mockPrisma = {
-  expense: {
-    findMany: jest.fn(),
-    create: jest.fn(),
-  },
-  user: {
-    findUnique: jest.fn(),
-    create: jest.fn(),
-  },
-};
-
-jest.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
-}));
-
 // Mock do NextRequest e NextResponse
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
@@ -26,6 +10,25 @@ jest.mock('next/server', () => ({
       status: init?.status || 200,
       ok: (init?.status || 200) >= 200 && (init?.status || 200) < 300,
     })),
+  },
+}));
+
+// Mock do prisma - deve ser definido ANTES de usar
+const mockExpenseFind = jest.fn();
+const mockExpenseCreate = jest.fn();
+const mockUserFindUnique = jest.fn();
+const mockUserCreate = jest.fn();
+
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    expense: {
+      findMany: mockExpenseFind,
+      create: mockExpenseCreate,
+    },
+    user: {
+      findUnique: mockUserFindUnique,
+      create: mockUserCreate,
+    },
   },
 }));
 
@@ -65,13 +68,13 @@ describe('API Route: /api/expenses', () => {
         },
       ];
 
-      mockPrisma.expense.findMany.mockResolvedValue(mockExpenses);
+      mockExpenseFind.mockResolvedValue(mockExpenses);
 
       const request = new NextRequest('http://localhost:3000/api/expenses');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(mockPrisma.expense.findMany).toHaveBeenCalledWith({
+      expect(mockExpenseFind).toHaveBeenCalledWith({
         orderBy: { date: 'desc' },
         take: 100,
       });
@@ -80,7 +83,7 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve retornar array vazio quando não há despesas', async () => {
-      mockPrisma.expense.findMany.mockResolvedValue([]);
+      mockExpenseFind.mockResolvedValue([]);
 
       const request = new NextRequest('http://localhost:3000/api/expenses');
       const response = await GET(request);
@@ -90,7 +93,7 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve retornar erro 500 quando o banco falha', async () => {
-      mockPrisma.expense.findMany.mockRejectedValue(new Error('Database error'));
+      mockExpenseFind.mockRejectedValue(new Error('Database error'));
 
       const request = new NextRequest('http://localhost:3000/api/expenses');
       const response = await GET(request);
@@ -107,24 +110,24 @@ describe('API Route: /api/expenses', () => {
         { id: '3', date: new Date('2024-01-01'), amount: 300 },
       ];
 
-      mockPrisma.expense.findMany.mockResolvedValue(mockExpenses);
+      mockExpenseFind.mockResolvedValue(mockExpenses);
 
       const request = new NextRequest('http://localhost:3000/api/expenses');
       await GET(request);
 
-      expect(mockPrisma.expense.findMany).toHaveBeenCalledWith({
+      expect(mockExpenseFind).toHaveBeenCalledWith({
         orderBy: { date: 'desc' },
         take: 100,
       });
     });
 
     it('deve limitar resultados a 100 registros', async () => {
-      mockPrisma.expense.findMany.mockResolvedValue([]);
+      mockExpenseFind.mockResolvedValue([]);
 
       const request = new NextRequest('http://localhost:3000/api/expenses');
       await GET(request);
 
-      expect(mockPrisma.expense.findMany).toHaveBeenCalledWith(
+      expect(mockExpenseFind).toHaveBeenCalledWith(
         expect.objectContaining({ take: 100 })
       );
     });
@@ -163,8 +166,8 @@ describe('API Route: /api/expenses', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue(mockExpense);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue(mockExpense);
 
       const request = {
         json: async () => validExpenseData,
@@ -173,18 +176,18 @@ describe('API Route: /api/expenses', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      expect(mockUserFindUnique).toHaveBeenCalledWith({
         where: { email: 'default@example.com' },
       });
-      expect(mockPrisma.expense.create).toHaveBeenCalled();
+      expect(mockExpenseCreate).toHaveBeenCalled();
       expect(response.status).toBe(201);
       expect(data.amount).toBe(150.50);
     });
 
     it('deve criar usuário padrão se não existir', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-      mockPrisma.user.create.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue(null);
+      mockUserCreate.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => validExpenseData,
@@ -192,7 +195,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.user.create).toHaveBeenCalledWith({
+      expect(mockUserCreate).toHaveBeenCalledWith({
         data: {
           email: 'default@example.com',
           name: 'Usuário Padrão',
@@ -246,8 +249,8 @@ describe('API Route: /api/expenses', () => {
     it('deve criar título padrão quando description não é fornecida', async () => {
       const dataWithoutDescription = { ...validExpenseData, description: undefined };
       
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => dataWithoutDescription,
@@ -255,7 +258,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalledWith(
+      expect(mockExpenseCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             title: 'Despesa - Luz',
@@ -265,8 +268,8 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve converter amount de string para float', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => validExpenseData,
@@ -274,7 +277,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalledWith(
+      expect(mockExpenseCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             amount: 150.50,
@@ -284,8 +287,8 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve converter date string para Date object', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => validExpenseData,
@@ -293,7 +296,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalledWith(
+      expect(mockExpenseCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             date: expect.any(Date),
@@ -303,8 +306,8 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve retornar erro 500 quando criação falha', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockRejectedValue(new Error('Database error'));
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockRejectedValue(new Error('Database error'));
 
       const request = {
         json: async () => validExpenseData,
@@ -318,8 +321,8 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve incluir fileName quando fornecido', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => validExpenseData,
@@ -327,7 +330,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalledWith(
+      expect(mockExpenseCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             fileName: 'luz-jan.pdf',
@@ -345,8 +348,8 @@ describe('API Route: /api/expenses', () => {
         date: '2024-01-01',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue({} as any);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue({} as any);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => extremeData,
@@ -354,7 +357,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalledWith(
+      expect(mockExpenseCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             amount: 999999.99,
@@ -370,8 +373,8 @@ describe('API Route: /api/expenses', () => {
         date: '2024-01-01',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue({} as any);
-      mockPrisma.expense.create.mockResolvedValue({} as any);
+      mockUserFindUnique.mockResolvedValue({} as any);
+      mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
         json: async () => specialCategory,
@@ -379,7 +382,7 @@ describe('API Route: /api/expenses', () => {
 
       await POST(request);
 
-      expect(mockPrisma.expense.create).toHaveBeenCalled();
+      expect(mockExpenseCreate).toHaveBeenCalled();
     });
   });
 });
