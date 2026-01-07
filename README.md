@@ -282,7 +282,23 @@ lsof -ti:3000 | xargs kill -9
 
 Este projeto é de código aberto e está disponível para uso pessoal e comercial.
 
-## 👤 Autor
+## � Deploy e CI/CD
+
+### Integração Contínua
+- **GitHub Actions** roda testes automaticamente em cada push e PR
+- Workflows configurados:
+  - `tests.yml` - Executa suite completa de testes
+  - `pr-check.yml` - Valida Pull Requests
+
+### Deploy Automático
+- **Vercel** realiza deploy automático a cada commit na branch `main`
+- Integração nativa GitHub ↔ Vercel
+- Preview deployments para cada PR
+- Sem necessidade de configurar secrets ou workflows adicionais
+
+📖 Guia completo: [DEPLOY.md](DEPLOY.md)
+
+## �👤 Autor
 
 Sistema desenvolvido para gerenciamento pessoal de despesas.
 

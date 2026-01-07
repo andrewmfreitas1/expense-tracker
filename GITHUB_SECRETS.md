@@ -1,12 +1,26 @@
 # 🔐 Configurar GitHub Secrets - Guia Rápido
 
-## ❌ Erro Atual
+## ⚠️ **ATENÇÃO: Este guia não é mais necessário!**
 
-```
-Error: Input required and not supplied: vercel-token
-```
+Se a Vercel já está fazendo deploy automático via integração nativa com GitHub, você **NÃO precisa** configurar estes secrets.
 
-## ✅ Solução: Adicionar 4 Secrets no GitHub
+O workflow `deploy.yml` foi removido. A Vercel gerencia os deploys automaticamente.
+
+---
+
+## 📝 Arquitetura Atual
+
+- ✅ **Vercel** - Faz deploy automático a cada push
+- ✅ **GitHub Actions** - Roda apenas os testes (tests.yml, pr-check.yml)
+- ✅ **Sem necessidade de secrets** para deploy
+
+---
+
+## ~~❌ Erro Antigo~~
+
+~~Error: Input required and not supplied: vercel-token~~
+
+## ~~✅ Solução Antiga: Adicionar 4 Secrets no GitHub~~
 
 ### Passo 1: Obter VERCEL_TOKEN
 
