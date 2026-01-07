@@ -217,7 +217,91 @@ Se quiser usar seu próprio domínio:
 
 ---
 
-## 🔧 Troubleshooting
+## � Configurar GitHub Actions (CI/CD Automático)
+
+Se você quer que os testes rodem automaticamente e o deploy seja feito via GitHub Actions:
+
+### 1. Obter Tokens da Vercel
+
+1. **Acesse**: https://vercel.com/account/tokens
+2. **Crie um novo token**
+   - Nome: `GitHub Actions`
+   - Scope: Full Account
+   - Clique em "Create"
+   - **COPIE O TOKEN** (só aparece uma vez!)
+
+### 2. Obter IDs do Projeto Vercel
+
+Após criar o projeto na Vercel:
+
+1. **Via Vercel Dashboard**:
+   - Acesse seu projeto na Vercel
+   - Vá em Settings > General
+   - Copie:
+     - **Project ID** (no final da página)
+     - **Team/Org ID** (se aplicável)
+
+2. **Via Vercel CLI** (alternativa):
+   ```bash
+   # Instale a CLI
+   npm i -g vercel
+   
+   # Faça login
+   vercel login
+   
+   # Link o projeto
+   vercel link
+   
+   # Veja os IDs
+   cat .vercel/project.json
+   ```
+
+### 3. Adicionar Secrets no GitHub
+
+1. **Acesse seu repositório no GitHub**
+   - URL: https://github.com/SEU-USUARIO/expense-tracker
+
+2. **Vá em Settings > Secrets and variables > Actions**
+
+3. **Clique em "New repository secret"** e adicione:
+
+   **Secret 1:**
+   - Name: `VERCEL_TOKEN`
+   - Value: [Cole o token que você criou]
+
+   **Secret 2:**
+   - Name: `VERCEL_ORG_ID`
+   - Value: [Cole o Organization ID da Vercel]
+
+   **Secret 3:**
+   - Name: `VERCEL_PROJECT_ID`
+   - Value: [Cole o Project ID da Vercel]
+
+   **Secret 4:**
+   - Name: `DATABASE_URL`
+   - Value: [Cole a URL do PostgreSQL]
+
+### 4. Verificar Workflows
+
+Os workflows já estão configurados em `.github/workflows/`:
+- `tests.yml` - Roda testes em cada PR
+- `deploy.yml` - Roda testes e faz deploy em cada push para main
+- `pr-check.yml` - Valida PRs antes do merge
+
+### 5. Testar o CI/CD
+
+Faça um push para testar:
+```bash
+git add .
+git commit -m "Test CI/CD"
+git push
+```
+
+Acompanhe em: https://github.com/SEU-USUARIO/expense-tracker/actions
+
+---
+
+## �🔧 Troubleshooting
 
 ### ❌ Erro: "Module not found"
 **Solução**: Certifique-se que `postinstall` está no package.json:
