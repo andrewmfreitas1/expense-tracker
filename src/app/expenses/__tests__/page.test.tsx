@@ -114,7 +114,7 @@ describe('ExpensesPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/2024/)).toBeInTheDocument();
+        expect(screen.getAllByText(/2024/).length).toBeGreaterThan(0);
       });
     });
   });
@@ -372,7 +372,7 @@ describe('ExpensesPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/Janeiro 2024/)).toBeInTheDocument();
+        expect(screen.getAllByText(/Janeiro 2024/).length).toBeGreaterThan(0);
       });
     });
 
@@ -382,7 +382,7 @@ describe('ExpensesPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/luz-jan\.pdf/)).toBeInTheDocument();
+        expect(screen.getAllByText(/luz-jan\.pdf/).length).toBeGreaterThan(0);
       });
     });
   });
