@@ -1,4 +1,17 @@
 // Mocks ANTES de importar o route
+// Mock do NextAuth - ANTES de importar qualquer coisa
+const mockGetServerSession = jest.fn();
+
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+jest.mock('next-auth/next', () => ({
+  __esModule: true,
+  getServerSession: mockGetServerSession,
+}));
+
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
   NextResponse: {
@@ -45,6 +58,12 @@ function createMockFile(content: string, filename: string, type: string) {
 describe('API Route: /api/upload', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock padrão: usuário autenticado
+    mockGetServerSession.mockResolvedValue({
+      user: { id: 'user-1', name: 'Test User', email: 'test@example.com' },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    });
   });
 
   describe('POST /api/upload', () => {

@@ -6,6 +6,21 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(() => '/'),
 }));
 
+// Mock do NextAuth
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: {
+      user: {
+        id: '1',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
+    },
+    status: 'authenticated',
+  })),
+  signOut: jest.fn(() => Promise.resolve({ url: '/login' })),
+}));
+
 describe('Sidebar Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,13 +77,15 @@ describe('Sidebar Component', () => {
   describe('Menu Mobile', () => {
     it('deve renderizar o botão de menu mobile', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'));
       expect(menuButton).toBeInTheDocument();
     });
 
     it('deve abrir o menu ao clicar no botão', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'))!;
       
       // Menu deve estar fechado inicialmente
       const sidebar = screen.getByRole('complementary');
@@ -81,7 +98,8 @@ describe('Sidebar Component', () => {
 
     it('deve fechar o menu ao clicar no overlay', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'))!;
       
       // Abrir menu
       fireEvent.click(menuButton);
@@ -99,7 +117,8 @@ describe('Sidebar Component', () => {
 
     it('deve fechar o menu ao clicar em um link', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'))!;
       
       // Abrir menu
       fireEvent.click(menuButton);
@@ -114,7 +133,8 @@ describe('Sidebar Component', () => {
 
     it('deve alternar o ícone do botão ao abrir/fechar', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'))!;
       
       // Inicialmente deve mostrar ícone Menu
       fireEvent.click(menuButton);
@@ -136,7 +156,8 @@ describe('Sidebar Component', () => {
 
     it('o botão mobile deve estar oculto em telas grandes', () => {
       render(<Sidebar />);
-      const menuButton = screen.getByRole('button');
+      const buttons = screen.getAllByRole('button');
+      const menuButton = buttons.find(btn => btn.className.includes('lg:hidden'));
       
       expect(menuButton).toHaveClass('lg:hidden');
     });

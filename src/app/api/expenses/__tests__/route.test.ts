@@ -1,3 +1,16 @@
+// Mock do NextAuth - ANTES de importar qualquer coisa
+const mockGetServerSession = jest.fn();
+
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+jest.mock('next-auth/next', () => ({
+  __esModule: true,
+  getServerSession: mockGetServerSession,
+}));
+
 // Mock do NextRequest e NextResponse - ANTES de importar o route
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
@@ -37,6 +50,12 @@ const mockUserCreate = prisma.user.create as jest.MockedFunction<typeof prisma.u
 describe('API Route: /api/expenses', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock padrão: usuário autenticado
+    mockGetServerSession.mockResolvedValue({
+      user: { id: 'user-1', name: 'Test User', email: 'test@example.com' },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    });
   });
 
   describe('GET /api/expenses', () => {
