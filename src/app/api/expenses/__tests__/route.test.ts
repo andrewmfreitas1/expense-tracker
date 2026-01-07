@@ -1,14 +1,12 @@
 // Mock do NextAuth - ANTES de importar qualquer coisa
-const mockGetServerSession = jest.fn();
-
 jest.mock('next-auth', () => ({
   __esModule: true,
   default: jest.fn(),
+  getServerSession: jest.fn(),
 }));
 
-jest.mock('next-auth/next', () => ({
-  __esModule: true,
-  getServerSession: mockGetServerSession,
+jest.mock('@/lib/auth', () => ({
+  authOptions: {},
 }));
 
 // Mock do NextRequest e NextResponse - ANTES de importar o route
@@ -40,12 +38,14 @@ jest.mock('@/lib/prisma', () => ({
 import { GET, POST } from '@/app/api/expenses/route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
 
 // Type assertions para acessar os mocks
 const mockExpenseFind = prisma.expense.findMany as jest.MockedFunction<typeof prisma.expense.findMany>;
 const mockExpenseCreate = prisma.expense.create as jest.MockedFunction<typeof prisma.expense.create>;
 const mockUserFindUnique = prisma.user.findUnique as jest.MockedFunction<typeof prisma.user.findUnique>;
 const mockUserCreate = prisma.user.create as jest.MockedFunction<typeof prisma.user.create>;
+const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
 
 describe('API Route: /api/expenses', () => {
   beforeEach(() => {
@@ -96,6 +96,7 @@ describe('API Route: /api/expenses', () => {
       const data = await response.json();
 
       expect(mockExpenseFind).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
         orderBy: { date: 'desc' },
         take: 100,
       });
@@ -142,6 +143,7 @@ describe('API Route: /api/expenses', () => {
       await GET(request);
 
       expect(mockExpenseFind).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
         orderBy: { date: 'desc' },
         take: 100,
       });
@@ -187,12 +189,11 @@ describe('API Route: /api/expenses', () => {
         description: validExpenseData.description,
         fileName: validExpenseData.fileName,
         filePath: null,
-        userId: mockUser.id,
+        userId: 'user-1',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockResolvedValue(mockExpense);
 
       const request = {
@@ -202,32 +203,19 @@ describe('API Route: /api/expenses', () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(mockUserFindUnique).toHaveBeenCalledWith({
-        where: { email: 'default@example.com' },
-      });
-      expect(mockExpenseCreate).toHaveBeenCalled();
-      expect(response.status).toBe(201);
-      expect(data.amount).toBe(150.50);
-    });
-
-    it('deve criar usuário padrão se não existir', async () => {
-      mockUserFindUnique.mockResolvedValue(null);
-      mockUserCreate.mockResolvedValue(mockUser);
-      mockExpenseCreate.mockResolvedValue({} as any);
-
-      const request = {
-        json: async () => validExpenseData,
-      } as NextRequest;
-
-      await POST(request);
-
-      expect(mockUserCreate).toHaveBeenCalledWith({
+      expect(mockExpenseCreate).toHaveBeenCalledWith({
         data: {
-          email: 'default@example.com',
-          name: 'Usuário Padrão',
-          password: 'temp',
+          title: validExpenseData.description,
+          amount: 150.50,
+          category: validExpenseData.category,
+          date: new Date(validExpenseData.date),
+          description: validExpenseData.description,
+          fileName: validExpenseData.fileName,
+          userId: 'user-1',
         },
       });
+      expect(response.status).toBe(201);
+      expect(data.amount).toBe(150.50);
     });
 
     it('deve retornar erro 400 quando amount está faltando', async () => {
@@ -275,7 +263,6 @@ describe('API Route: /api/expenses', () => {
     it('deve criar título padrão quando description não é fornecida', async () => {
       const dataWithoutDescription = { ...validExpenseData, description: undefined };
       
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
@@ -288,13 +275,13 @@ describe('API Route: /api/expenses', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             title: 'Despesa - Luz',
+            userId: 'user-1',
           }),
         })
       );
     });
 
     it('deve converter amount de string para float', async () => {
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
@@ -307,13 +294,13 @@ describe('API Route: /api/expenses', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             amount: 150.50,
+            userId: 'user-1',
           }),
         })
       );
     });
 
     it('deve converter date string para Date object', async () => {
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
@@ -326,13 +313,13 @@ describe('API Route: /api/expenses', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             date: expect.any(Date),
+            userId: 'user-1',
           }),
         })
       );
     });
 
     it('deve retornar erro 500 quando criação falha', async () => {
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockRejectedValue(new Error('Database error'));
 
       const request = {
@@ -347,7 +334,6 @@ describe('API Route: /api/expenses', () => {
     });
 
     it('deve incluir fileName quando fornecido', async () => {
-      mockUserFindUnique.mockResolvedValue(mockUser);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
@@ -360,6 +346,7 @@ describe('API Route: /api/expenses', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             fileName: 'luz-jan.pdf',
+            userId: 'user-1',
           }),
         })
       );
@@ -374,7 +361,6 @@ describe('API Route: /api/expenses', () => {
         date: '2024-01-01',
       };
 
-      mockUserFindUnique.mockResolvedValue({} as any);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {
@@ -387,6 +373,7 @@ describe('API Route: /api/expenses', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             amount: 999999.99,
+            userId: 'user-1',
           }),
         })
       );
@@ -399,7 +386,6 @@ describe('API Route: /api/expenses', () => {
         date: '2024-01-01',
       };
 
-      mockUserFindUnique.mockResolvedValue({} as any);
       mockExpenseCreate.mockResolvedValue({} as any);
 
       const request = {

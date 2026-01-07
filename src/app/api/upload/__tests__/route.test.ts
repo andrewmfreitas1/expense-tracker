@@ -1,15 +1,13 @@
 // Mocks ANTES de importar o route
 // Mock do NextAuth - ANTES de importar qualquer coisa
-const mockGetServerSession = jest.fn();
-
 jest.mock('next-auth', () => ({
   __esModule: true,
   default: jest.fn(),
+  getServerSession: jest.fn(),
 }));
 
-jest.mock('next-auth/next', () => ({
-  __esModule: true,
-  getServerSession: mockGetServerSession,
+jest.mock('@/lib/auth', () => ({
+  authOptions: {},
 }));
 
 jest.mock('next/server', () => ({
@@ -38,6 +36,9 @@ jest.mock('pdf-parse', () => jest.fn());
 // Importar DEPOIS dos mocks
 import { POST } from '@/app/api/upload/route';
 import { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth';
+
+const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
 
 // Helper para criar File mock com arrayBuffer()
 function createMockFile(content: string, filename: string, type: string) {
