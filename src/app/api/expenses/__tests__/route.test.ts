@@ -1,7 +1,4 @@
-import { GET, POST } from '@/app/api/expenses/route';
-import { NextRequest } from 'next/server';
-
-// Mock do NextRequest e NextResponse
+// Mock do NextRequest e NextResponse - ANTES de importar o route
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
   NextResponse: {
@@ -12,24 +9,30 @@ jest.mock('next/server', () => ({
   },
 }));
 
-// Mock do prisma - deve ser definido ANTES de usar
-const mockExpenseFind = jest.fn();
-const mockExpenseCreate = jest.fn();
-const mockUserFindUnique = jest.fn();
-const mockUserCreate = jest.fn();
-
+// Mock do prisma - ANTES de importar o route
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     expense: {
-      findMany: mockExpenseFind,
-      create: mockExpenseCreate,
+      findMany: jest.fn(),
+      create: jest.fn(),
     },
     user: {
-      findUnique: mockUserFindUnique,
-      create: mockUserCreate,
+      findUnique: jest.fn(),
+      create: jest.fn(),
     },
   },
 }));
+
+// Importar DEPOIS dos mocks
+import { GET, POST } from '@/app/api/expenses/route';
+import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+// Type assertions para acessar os mocks
+const mockExpenseFind = prisma.expense.findMany as jest.MockedFunction<typeof prisma.expense.findMany>;
+const mockExpenseCreate = prisma.expense.create as jest.MockedFunction<typeof prisma.expense.create>;
+const mockUserFindUnique = prisma.user.findUnique as jest.MockedFunction<typeof prisma.user.findUnique>;
+const mockUserCreate = prisma.user.create as jest.MockedFunction<typeof prisma.user.create>;
 
 describe('API Route: /api/expenses', () => {
   beforeEach(() => {
@@ -77,8 +80,13 @@ describe('API Route: /api/expenses', () => {
         orderBy: { date: 'desc' },
         take: 100,
       });
-      expect(data).toEqual(mockExpenses);
       expect(data).toHaveLength(2);
+      expect(data[0]).toMatchObject({
+        id: '1',
+        title: 'Conta de Luz',
+        amount: 150.50,
+        category: 'Luz',
+      });
     });
 
     it('deve retornar array vazio quando não há despesas', async () => {

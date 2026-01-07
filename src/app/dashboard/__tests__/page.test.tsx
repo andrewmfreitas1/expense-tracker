@@ -98,7 +98,8 @@ describe('DashboardPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/3/)).toBeInTheDocument();
+        // O número 3 aparece em vários lugares, então verificamos que existe pelo menos um
+        expect(screen.getAllByText(/3/).length).toBeGreaterThan(0);
       });
     });
 
@@ -339,7 +340,7 @@ describe('DashboardPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText(/R\$/)).toBeInTheDocument();
+        expect(screen.getAllByText(/R\$/).length).toBeGreaterThan(0);
       });
     });
 

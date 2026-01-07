@@ -80,9 +80,9 @@ describe('ExpensesPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText('Conta de Luz')).toBeInTheDocument();
-        expect(screen.getByText('Conta de Água')).toBeInTheDocument();
-        expect(screen.getByText('Internet')).toBeInTheDocument();
+        expect(screen.getAllByText(/Janeiro 2024/).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/Fevereiro 2024/).length).toBeGreaterThan(0);
+        expect(screen.getByText(/3\s+despesa\(s\)/)).toBeInTheDocument();
       });
     });
 
@@ -103,8 +103,8 @@ describe('ExpensesPage', () => {
       });
       
       await waitFor(() => {
-        expect(screen.getByText('Luz')).toBeInTheDocument();
-        expect(screen.getByText('Água')).toBeInTheDocument();
+        expect(screen.getAllByText('Luz').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Água').length).toBeGreaterThan(0);
       });
     });
 

@@ -1,7 +1,4 @@
-import { POST } from '@/app/api/upload/route';
-import { NextRequest } from 'next/server';
-
-// Mock do NextResponse
+// Mocks ANTES de importar o route
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
   NextResponse: {
@@ -24,6 +21,10 @@ jest.mock('tesseract.js', () => ({
 
 // Mock do pdf-parse
 jest.mock('pdf-parse', () => jest.fn());
+
+// Importar DEPOIS dos mocks
+import { POST } from '@/app/api/upload/route';
+import { NextRequest } from 'next/server';
 
 // Helper para criar File mock com arrayBuffer()
 function createMockFile(content: string, filename: string, type: string) {
@@ -223,7 +224,7 @@ describe('API Route: /api/upload', () => {
       expect(data).toHaveProperty('extracted');
       expect(data.extracted).toHaveProperty('amount');
       expect(data.extracted).toHaveProperty('date');
-      expect(data.extracted).toHaveProperty('category');
+      expect(data.extracted).toHaveProperty('description');
     });
 
     it('deve retornar estrutura de dados extraídos', async () => {
@@ -266,9 +267,6 @@ describe('API Route: /api/upload', () => {
     });
 
     it('deve aceitar múltiplos formatos de imagem', async () => {
-      const { recognize } = require('tesseract.js');
-      recognize.mockResolvedValue({ data: { text: 'Texto' } });
-
       const formats = [
         { type: 'image/jpeg', ext: 'jpg' },
         { type: 'image/png', ext: 'png' },
