@@ -45,6 +45,10 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock do URL.createObjectURL (usado em exportToCSV)
+global.URL.createObjectURL = jest.fn(() => 'mock-url');
+global.URL.revokeObjectURL = jest.fn();
+
 // Mock do IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}

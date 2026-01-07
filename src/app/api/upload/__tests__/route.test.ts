@@ -5,11 +5,10 @@ import { NextRequest } from 'next/server';
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
   NextResponse: {
-    json: jest.fn((data, init) => ({
-      json: async () => data,
+    json: (data, init) => new Response(JSON.stringify(data), {
       status: init?.status || 200,
-      ok: (init?.status || 200) >= 200 && (init?.status || 200) < 300,
-    })),
+      headers: { 'Content-Type': 'application/json' },
+    }),
   },
 }));
 

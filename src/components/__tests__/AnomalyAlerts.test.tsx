@@ -203,7 +203,7 @@ describe('AnomalyAlerts Component', () => {
       const { container } = render(<AnomalyAlerts alerts={alerts} />);
       
       expect(screen.getByText('Luz')).toBeInTheDocument();
-      expect(screen.getByText(/R\$ 200\.00/)).toBeInTheDocument();
+      expect(screen.getByText(/R\$\s*200,00/)).toBeInTheDocument();
       expect(screen.getByText(/\+100(%|\.0%)/)).toBeInTheDocument();
       
       // Verificar se tem a classe de alerta alto
@@ -226,7 +226,7 @@ describe('AnomalyAlerts Component', () => {
       const { container } = render(<AnomalyAlerts alerts={alerts} />);
       
       expect(screen.getByText('Internet')).toBeInTheDocument();
-      expect(screen.getByText(/R\$ 50\.00/)).toBeInTheDocument();
+      expect(screen.getByText(/R\$\s*50,00/)).toBeInTheDocument();
       expect(screen.getByText(/-50(%|\.0%)/)).toBeInTheDocument();
       
       // Verificar se tem a classe de alerta baixo

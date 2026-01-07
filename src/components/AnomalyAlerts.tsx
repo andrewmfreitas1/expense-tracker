@@ -120,10 +120,10 @@ export default function AnomalyAlerts({ alerts }: AnomalyAlertsProps) {
 
               <div className="space-y-1 text-sm">
                 <p className={alert.type === 'high' ? 'text-red-800' : 'text-blue-800'}>
-                  <span className="font-medium">Valor atual:</span> R$ {alert.currentMonth.toFixed(2)}
+                  <span className="font-medium">Valor atual:</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(alert.currentMonth)}
                 </p>
                 <p className={alert.type === 'high' ? 'text-red-700' : 'text-blue-700'}>
-                  <span className="font-medium">Média histórica:</span> R$ {alert.average.toFixed(2)}
+                  <span className="font-medium">Média histórica:</span> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(alert.average)}
                   <span className="text-xs ml-2">
                     ({alert.monthsAnalyzed} {alert.monthsAnalyzed === 1 ? 'mês' : 'meses'})
                   </span>
