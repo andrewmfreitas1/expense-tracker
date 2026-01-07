@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Por enquanto, retornar dados mocados já que não temos autenticação
-    // Em produção, você filtraria por userId
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      );
+    }
+
     const expenses = await prisma.expense.findMany({
+      where: {
+        userId: session.user.id,
+      },
       orderBy: { date: 'desc' },
       take: 100,
     });
@@ -22,6 +34,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Não autorizado' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { amount, category, date, description, fileName } = body;
 
@@ -33,24 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Por enquanto, usar um userId fixo (em produção, pegar do auth)
-    const userId = 'default-user';
-
-    // Criar ou buscar usuário padrão
-    let user = await prisma.user.findUnique({
-      where: { email: 'default@example.com' },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: 'default@example.com',
-          name: 'Usuário Padrão',
-          password: 'temp', // Em produção, usar hash
-        },
-      });
-    }
-
     const expense = await prisma.expense.create({
       data: {
         title: description || `Despesa - ${category}`,
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
         date: new Date(date),
         description,
         fileName,
-        userId: user.id,
+        userId: session.user.id,
       },
     });
 
