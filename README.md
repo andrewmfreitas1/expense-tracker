@@ -258,13 +258,20 @@ O sistema usa **Tesseract.js** para extrair texto de imagens:
 
 ## � Deploy Gratuito Online
 
-Quer colocar seu app na internet? Veja o guia completo em [DEPLOY.md](DEPLOY.md)
+### ⚡ Deploy Rápido na Vercel
+
+**Já fez deploy?** Veja o guia completo de configuração: **[VERCEL_SETUP.md](VERCEL_SETUP.md)**
+
+**Primeira vez?** Veja o guia de deploy inicial: **[DEPLOY.md](DEPLOY.md)**
 
 **Resumo rápido:**
 1. Crie conta no GitHub e suba o código
 2. Crie banco PostgreSQL gratuito no Neon (https://neon.tech)
 3. Faça deploy na Vercel (https://vercel.com)
-4. Configure a variável `DATABASE_URL`
+4. **IMPORTANTE**: Configure as variáveis de ambiente (ver VERCEL_SETUP.md)
+   - `DATABASE_URL`
+   - `NEXTAUTH_URL`
+   - `NEXTAUTH_SECRET`
 5. Seu app estará online! 🎉
 
 **Plataformas 100% gratuitas:**
