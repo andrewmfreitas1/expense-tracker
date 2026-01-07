@@ -4,6 +4,7 @@ Sistema web completo para upload, gerenciamento e acompanhamento de despesas men
 
 ## 🚀 Funcionalidades
 
+- 🔐 **Autenticação Segura**: Login/registro com NextAuth.js e bcrypt
 - ✅ **Upload de Arquivos**: Faça upload de PDFs e imagens (JPG, PNG) de contas e boletos
 - 🤖 **Extração Automática**: OCR (Tesseract.js) extrai valores e datas automaticamente
 - 📊 **Dashboard Interativo**: Visualize gráficos de barras, pizza e linha
@@ -11,18 +12,21 @@ Sistema web completo para upload, gerenciamento e acompanhamento de despesas men
 - 🏷️ **Categorização**: Organize despesas por categoria (água, luz, internet, etc.)
 - 📋 **Listagem Completa**: Visualize todas as despesas com filtros
 - 💾 **Exportação**: Exporte dados para CSV
+- 👤 **Dados Privados**: Cada usuário vê apenas suas próprias despesas
 - 🎨 **Interface Moderna**: Design responsivo com Tailwind CSS
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Framework**: Next.js 14+ (App Router)
 - **Linguagem**: TypeScript
+- **Autenticação**: NextAuth.js com bcrypt
 - **Estilização**: Tailwind CSS
-- **Banco de Dados**: SQLite com Prisma ORM
+- **Banco de Dados**: PostgreSQL com Prisma ORM
 - **OCR**: Tesseract.js
 - **Gráficos**: Recharts
 - **Ícones**: Lucide React
 - **Formatação de Datas**: date-fns
+- **Segurança**: Password hashing (12 rounds), JWT sessions, protected routes
 
 ## 📋 Pré-requisitos
 
@@ -66,7 +70,24 @@ cd c:\repo\pessoal
 npm install
 ```
 
-### 3. Configure o banco de dados
+### 3. Configure as variáveis de ambiente
+Crie um arquivo `.env` na raiz do projeto:
+
+```bash
+# Banco de Dados PostgreSQL
+DATABASE_URL="postgresql://usuario:senha@host:5432/database"
+
+# Autenticação NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="gere-com-comando-abaixo"
+```
+
+Gere a secret:
+```bash
+npx openssl rand -base64 32
+```
+
+### 4. Configure o banco de dados
 ```bash
 # Gerar o cliente Prisma
 npm run prisma:generate
@@ -75,12 +96,20 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-### 4. Inicie o servidor de desenvolvimento
+### 5. Inicie o servidor de desenvolvimento
 ```bash
 npm run dev
 ```
 
 O aplicativo estará disponível em: **http://localhost:3000**
+
+### 6. Primeiro Acesso
+
+1. Acesse: http://localhost:3000/login
+2. Clique em "Registro" e crie sua conta
+3. Faça login e comece a usar!
+
+📚 **Documentação completa de autenticação**: Veja [AUTH_SETUP.md](AUTH_SETUP.md)
 
 ## 📁 Estrutura do Projeto
 
