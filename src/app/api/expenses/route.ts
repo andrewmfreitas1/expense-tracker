@@ -7,16 +7,25 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
       );
     }
 
+    // Buscar usuário pelo email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json([], { status: 200 });
+    }
+
     const expenses = await prisma.expense.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
       },
       orderBy: { date: 'desc' },
       take: 100,
@@ -36,11 +45,25 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
       );
+    }
+
+    // Buscar ou criar usuário
+    let user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name || 'Usuário',
+        }
+      });
     }
 
     const body = await request.json();
@@ -62,7 +85,7 @@ export async function POST(request: NextRequest) {
         date: new Date(date),
         description,
         fileName,
-        userId: session.user.id,
+        userId: user.id,
       },
     });
 

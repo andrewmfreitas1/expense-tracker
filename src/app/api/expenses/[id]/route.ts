@@ -10,10 +10,22 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
+      );
+    }
+
+    // Buscar usuário pelo email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' },
+        { status: 404 }
       );
     }
 
@@ -32,7 +44,7 @@ export async function DELETE(
       );
     }
 
-    if (expense.userId !== session.user.id) {
+    if (expense.userId !== user.id) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 403 }
