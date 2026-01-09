@@ -8,11 +8,26 @@ export async function POST(request: Request) {
   try {
     // Validar autenticação
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json(
         { error: 'Não autenticado' },
         { status: 401 }
       );
+    }
+
+    // Buscar ou criar usuário (garantir que existe no banco)
+    let user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      // Se o usuário não existe, criar (caso de OAuth ou JWT)
+      user = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name || 'Usuário',
+        }
+      });
     }
 
     // Processar form data
@@ -37,7 +52,7 @@ export async function POST(request: Request) {
       // Verificar duplicatas (mesma data + valor + descrição)
       const existing = await prisma.expense.findFirst({
         where: {
-          userId: session.user.id,
+          userId: user.id,
           amount: Math.abs(transaction.amount),
           dueDate: transaction.date,
           description: transaction.description
@@ -52,7 +67,7 @@ export async function POST(request: Request) {
       // Criar despesa
       const expense = await prisma.expense.create({
         data: {
-          userId: session.user.id,
+          userId: user.id,
           title: transaction.description,
           description: transaction.description,
           amount: Math.abs(transaction.amount),
