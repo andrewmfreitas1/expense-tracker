@@ -175,7 +175,7 @@ describe('Sidebar Component', () => {
       render(<Sidebar />);
       
       const links = screen.getAllByRole('link');
-      expect(links.length).toBe(4); // 4 itens do menu
+      expect(links.length).toBe(5); // 5 itens do menu (incluindo Open Finance)
       
       links.forEach(link => {
         expect(link).toHaveAttribute('href');

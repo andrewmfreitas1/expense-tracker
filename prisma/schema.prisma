@@ -20,9 +20,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  accounts      Account[]
-  sessions      Session[]
-  expenses      Expense[]
+  accounts         Account[]
+  sessions         Session[]
+  expenses         Expense[]
+  bankConnections  BankConnection[]
+  consentLogs      ConsentLog[]
+  syncLogs         SyncLog[]
 }
 
 model Account {
@@ -73,10 +76,19 @@ model Expense {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
+  
+  // Open Finance fields
+  source         String?  @default("MANUAL") // MANUAL, OPEN_FINANCE
+  externalId     String?  // ID do boleto no Pluggy
+  barcode        String?  // Código de barras do boleto
+  isPaid         Boolean  @default(false)
+  paidDate       DateTime?
+  connectionId   String?  // Referência à conexão bancária
+  
   @@index([userId])
   @@index([date])
   @@index([category])
+  @@index([externalId])
 }
 
 model Category {
@@ -85,3 +97,61 @@ model Category {
   icon  String?
   color String?
 }
+
+// Open Finance Models
+
+model BankConnection {
+  id                String    @id @default(cuid())
+  userId            String
+  itemId            String    // ID da conexão no Pluggy
+  accessTokenEnc    String    @db.Text // Token criptografado
+  accessTokenIV     String    // IV para descriptografia
+  accessTokenTag    String    // Tag de autenticação
+  institutionName   String
+  institutionId     String?   // ID da instituição no Pluggy
+  consentExpiresAt  DateTime
+  lastSyncAt        DateTime?
+  status            String    @default("ACTIVE") // ACTIVE, EXPIRED, REVOKED, ERROR
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ConsentLog {
+  id            String   @id @default(cuid())
+  userId        String
+  action        String   // GRANTED, RENEWED, REVOKED
+  itemId        String?
+  institution   String?
+  ipAddress     String
+  userAgent     String
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+}
+
+model SyncLog {
+  id              String   @id @default(cuid())
+  userId          String
+  connectionId    String
+  syncType        String   // BILLS, TRANSACTIONS, ACCOUNTS
+  status          String   // SUCCESS, ERROR, PARTIAL
+  itemsImported   Int      @default(0)
+  errorMessage    String?  @db.Text
+  duration        Int      // milissegundos
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([connectionId])
+}
+

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Upload, BarChart3, List, Menu, X, LogOut, User } from 'lucide-react';
+import { Home, Upload, BarChart3, List, Menu, X, LogOut, User, Building2 } from 'lucide-react';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
@@ -16,6 +16,7 @@ export default function Sidebar() {
     { href: '/upload', label: 'Upload', icon: Upload },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/expenses', label: 'Despesas', icon: List },
+    { href: '/open-finance', label: 'Open Finance', icon: Building2 },
   ];
 
   const isActive = (path: string) => pathname === path;
