@@ -8,22 +8,10 @@ export async function POST(request: Request) {
   try {
     // Validar autenticação
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Não autenticado' },
         { status: 401 }
-      );
-    }
-
-    // Buscar usuário
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Usuário não encontrado' },
-        { status: 404 }
       );
     }
 
@@ -49,7 +37,7 @@ export async function POST(request: Request) {
       // Verificar duplicatas (mesma data + valor + descrição)
       const existing = await prisma.expense.findFirst({
         where: {
-          userId: user.id,
+          userId: session.user.id,
           amount: Math.abs(transaction.amount),
           dueDate: transaction.date,
           description: transaction.description
@@ -64,7 +52,7 @@ export async function POST(request: Request) {
       // Criar despesa
       const expense = await prisma.expense.create({
         data: {
-          userId: user.id,
+          userId: session.user.id,
           title: transaction.description,
           description: transaction.description,
           amount: Math.abs(transaction.amount),
