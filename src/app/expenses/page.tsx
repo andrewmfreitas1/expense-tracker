@@ -243,9 +243,9 @@ export default function ExpensesPage() {
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="flex items-center gap-2">
                           {expense.source === 'OPEN_FINANCE' ? (
-                            <Building2 className="w-4 h-4 text-blue-600" title="Importado via Open Finance" />
+                            <Building2 className="w-4 h-4 text-blue-600" aria-label="Importado via Open Finance" />
                           ) : (
-                            <UploadIcon className="w-4 h-4 text-gray-400" title="Upload manual" />
+                            <UploadIcon className="w-4 h-4 text-gray-400" aria-label="Upload manual" />
                           )}
                           <div>
                             {expense.description || expense.title}
