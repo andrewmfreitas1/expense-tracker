@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trash2, Filter, Download, Building2, Upload as UploadIcon } from 'lucide-react';
+import { Trash2, Filter, Download, Building2, Upload as UploadIcon, CheckSquare, Square } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -25,6 +25,8 @@ export default function ExpensesPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [selectedSource, setSelectedSource] = useState<'all' | 'MANUAL' | 'OPEN_FINANCE'>('all');
+  const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchExpenses();
@@ -86,6 +88,52 @@ export default function ExpensesPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedExpenses.size === 0) {
+      alert('Selecione ao menos uma despesa para excluir');
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja excluir ${selectedExpenses.size} despesa(s)?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedExpenses).map(id =>
+        fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+      );
+
+      await Promise.all(deletePromises);
+      
+      setExpenses(expenses.filter(e => !selectedExpenses.has(e.id)));
+      setSelectedExpenses(new Set());
+    } catch (error) {
+      console.error('Erro ao deletar despesas:', error);
+      alert('Erro ao deletar algumas despesas');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleSelectExpense = (id: string) => {
+    const newSelected = new Set(selectedExpenses);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedExpenses(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedExpenses.size === filteredExpenses.length) {
+      setSelectedExpenses(new Set());
+    } else {
+      setSelectedExpenses(new Set(filteredExpenses.map(e => e.id)));
+    }
+  };
+
   const exportToCSV = () => {
     const headers = ['Data', 'Categoria', 'Descrição', 'Valor'];
     const rows = filteredExpenses.map((e) => [
@@ -134,16 +182,33 @@ export default function ExpensesPage() {
               <h1 className="text-4xl font-bold text-gray-900">Minhas Despesas</h1>
               <p className="text-gray-600 mt-2">
                 {filteredExpenses.length} despesa(s) encontrada(s)
+                {selectedExpenses.size > 0 && (
+                  <span className="ml-2 text-blue-600 font-semibold">
+                    • {selectedExpenses.size} selecionada(s)
+                  </span>
+                )}
               </p>
             </div>
-            <button
-              onClick={exportToCSV}
-              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-              disabled={filteredExpenses.length === 0}
-            >
-              <Download className="w-5 h-5" />
-              <span>Exportar CSV</span>
-            </button>
+            <div className="flex gap-3">
+              {selectedExpenses.size > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={isDeleting}
+                  className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  <span>{isDeleting ? 'Excluindo...' : `Excluir ${selectedExpenses.size}`}</span>
+                </button>
+              )}
+              <button
+                onClick={exportToCSV}
+                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                disabled={filteredExpenses.length === 0}
+              >
+                <Download className="w-5 h-5" />
+                <span>Exportar CSV</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -212,6 +277,19 @@ export default function ExpensesPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left">
+                      <button
+                        onClick={toggleSelectAll}
+                        className="flex items-center justify-center w-5 h-5 text-gray-500 hover:text-gray-700"
+                        title={selectedExpenses.size === filteredExpenses.length ? 'Desmarcar todas' : 'Selecionar todas'}
+                      >
+                        {selectedExpenses.size === filteredExpenses.length ? (
+                          <CheckSquare className="w-5 h-5" />
+                        ) : (
+                          <Square className="w-5 h-5" />
+                        )}
+                      </button>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Data
                     </th>
@@ -232,6 +310,18 @@ export default function ExpensesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredExpenses.map((expense) => (
                     <tr key={expense.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => toggleSelectExpense(expense.id)}
+                          className="flex items-center justify-center w-5 h-5 text-gray-500 hover:text-blue-600"
+                        >
+                          {selectedExpenses.has(expense.id) ? (
+                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <Square className="w-5 h-5" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {format(new Date(expense.date), 'dd/MM/yyyy')}
                       </td>
@@ -281,6 +371,7 @@ export default function ExpensesPage() {
                 </tbody>
                 <tfoot className="bg-gray-50">
                   <tr>
+                    <td></td>
                     <td colSpan={3} className="px-6 py-4 text-sm font-medium text-gray-900">
                       Total
                     </td>
