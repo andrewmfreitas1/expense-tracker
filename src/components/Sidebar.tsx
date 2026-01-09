@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Upload, BarChart3, List, Menu, X, LogOut, User, Building2 } from 'lucide-react';
+import { Home, Upload, BarChart3, List, Menu, X, LogOut, User, Building2, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 
@@ -14,6 +14,7 @@ export default function Sidebar() {
   const menuItems = [
     { href: '/', label: 'Início', icon: Home },
     { href: '/upload', label: 'Upload', icon: Upload },
+    { href: '/import-statement', label: 'Importar Extrato', icon: FileText },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/expenses', label: 'Despesas', icon: List },
     { href: '/open-finance', label: 'Open Finance', icon: Building2 },

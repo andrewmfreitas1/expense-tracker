@@ -37,8 +37,10 @@ describe('Sidebar Component', () => {
       render(<Sidebar />);
       expect(screen.getByText('Início')).toBeInTheDocument();
       expect(screen.getByText('Upload')).toBeInTheDocument();
+      expect(screen.getByText('Importar Extrato')).toBeInTheDocument();
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
       expect(screen.getByText('Despesas')).toBeInTheDocument();
+      expect(screen.getByText('Open Finance')).toBeInTheDocument();
     });
 
     it('deve renderizar a versão do aplicativo', () => {
@@ -54,13 +56,17 @@ describe('Sidebar Component', () => {
       
       const homeLink = screen.getByRole('link', { name: /início/i });
       const uploadLink = screen.getByRole('link', { name: /upload/i });
+      const importLink = screen.getByRole('link', { name: /importar extrato/i });
       const dashboardLink = screen.getByRole('link', { name: /dashboard/i });
       const expensesLink = screen.getByRole('link', { name: /despesas/i });
+      const openFinanceLink = screen.getByRole('link', { name: /open finance/i });
 
       expect(homeLink).toHaveAttribute('href', '/');
       expect(uploadLink).toHaveAttribute('href', '/upload');
+      expect(importLink).toHaveAttribute('href', '/import-statement');
       expect(dashboardLink).toHaveAttribute('href', '/dashboard');
       expect(expensesLink).toHaveAttribute('href', '/expenses');
+      expect(openFinanceLink).toHaveAttribute('href', '/open-finance');
     });
 
     it('deve destacar o item ativo baseado no pathname', () => {
@@ -175,7 +181,7 @@ describe('Sidebar Component', () => {
       render(<Sidebar />);
       
       const links = screen.getAllByRole('link');
-      expect(links.length).toBe(5); // 5 itens do menu (incluindo Open Finance)
+      expect(links.length).toBe(6); // 6 itens do menu (incluindo Open Finance e Importar Extrato)
       
       links.forEach(link => {
         expect(link).toHaveAttribute('href');

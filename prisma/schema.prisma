@@ -78,12 +78,13 @@ model Expense {
   updatedAt   DateTime @updatedAt
   
   // Open Finance fields
-  source         String?  @default("MANUAL") // MANUAL, OPEN_FINANCE
+  source         String?  @default("MANUAL") // MANUAL, OPEN_FINANCE, BANK_STATEMENT
   externalId     String?  // ID do boleto no Pluggy
   barcode        String?  // Código de barras do boleto
   isPaid         Boolean  @default(false)
   paidDate       DateTime?
   connectionId   String?  // Referência à conexão bancária
+  dueDate        DateTime? // Data de vencimento
   
   @@index([userId])
   @@index([date])
