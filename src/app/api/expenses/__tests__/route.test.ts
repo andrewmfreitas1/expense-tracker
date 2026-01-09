@@ -56,6 +56,18 @@ describe('API Route: /api/expenses', () => {
       user: { id: 'user-1', name: 'Test User', email: 'test@example.com' },
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });
+
+    // Mock padrão: usuário encontrado no banco
+    mockUserFindUnique.mockResolvedValue({
+      id: 'user-1',
+      name: 'Test User',
+      email: 'test@example.com',
+      password: null,
+      emailVerified: null,
+      image: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   });
 
   describe('GET /api/expenses', () => {
