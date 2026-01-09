@@ -25,9 +25,9 @@ export async function parseOFX(content: string): Promise<ParsedTransaction[]> {
   
   // Extrair todas as transações <STMTTRN>...</STMTTRN>
   const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/g;
-  const matches = normalized.matchAll(transactionRegex);
+  const matchesArray = Array.from(normalized.matchAll(transactionRegex));
   
-  for (const match of matches) {
+  for (const match of matchesArray) {
     const transactionBlock = match[1];
     
     try {

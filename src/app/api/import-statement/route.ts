@@ -69,6 +69,7 @@ export async function POST(request: Request) {
           description: transaction.description,
           amount: Math.abs(transaction.amount),
           category: transaction.category || 'Outros',
+          date: transaction.date,
           dueDate: transaction.date,
           isPaid: false,
           source: 'BANK_STATEMENT'
