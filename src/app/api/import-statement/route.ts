@@ -49,13 +49,17 @@ export async function POST(request: Request) {
     const imported: any[] = [];
     
     for (const transaction of expenses) {
-      // Verificar duplicatas (mesma data + valor + descrição)
+      // Verificar duplicatas (mesma data + valor + descrição OU mesma data + valor)
+      // Permite complementar extratos parciais do mesmo mês
       const existing = await prisma.expense.findFirst({
         where: {
           userId: user.id,
           amount: Math.abs(transaction.amount),
           dueDate: transaction.date,
-          description: transaction.description
+          OR: [
+            { description: transaction.description },
+            { title: transaction.description }
+          ]
         }
       });
 

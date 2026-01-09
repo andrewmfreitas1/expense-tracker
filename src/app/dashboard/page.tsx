@@ -142,7 +142,15 @@ export default function DashboardPage() {
       ).sort().reverse() as string[];
       setAvailableMonths(months);
       
-      processData(data, 'all');
+      // Definir mês atual como padrão se não houver seleção
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      if (months.includes(currentMonth) && selectedMonth === 'all') {
+        setSelectedMonth(currentMonth);
+        processData(data, currentMonth);
+      } else {
+        processData(data, selectedMonth || 'all');
+      }
     } catch (error) {
       console.error('Erro ao carregar despesas:', error);
     } finally {
@@ -153,11 +161,20 @@ export default function DashboardPage() {
   const processData = (data: Expense[], monthFilter: string) => {
     // Filtrar por mês se necessário
     let filteredData = data;
-    if (monthFilter !== 'all') {
+    if (monthFilter !== 'all' && monthFilter !== 'current') {
       filteredData = data.filter((expense) => {
         const date = new Date(expense.date);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         return monthKey === monthFilter;
+      });
+    } else if (monthFilter === 'current') {
+      // Filtrar apenas mês atual
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      filteredData = data.filter((expense) => {
+        const date = new Date(expense.date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return monthKey === currentMonth;
       });
     }
 
@@ -289,6 +306,7 @@ export default function DashboardPage() {
                   onChange={(e) => handleMonthChange(e.target.value)}
                   className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium text-gray-700 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
+                  <option value="current">📅 Mês atual</option>
                   <option value="all">Todos os meses</option>
                   {availableMonths.map((month) => (
                     <option key={month} value={month}>
